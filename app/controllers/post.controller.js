@@ -16,10 +16,27 @@ const InsertPost = async (req, res) => {
 
 const FetchPosts = async (req, res) => {
   try {
-    const posts = await Post.find();
-    res
-      .status(200)
-      .send({ message: "Posts retrieved successfully!", data: posts });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find().skip(skip).limit(limit);
+
+    const totalPosts = await Post.countDocuments();
+
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    res.status(200).send({
+      message: "Posts retrieved successfully!",
+      data: posts,
+      pagination: {
+        totalPosts,
+        totalPages,
+        currentPage: page,
+        limit,
+      },
+    });
   } catch (error) {
     res.status(200).send({ message: error });
   }
